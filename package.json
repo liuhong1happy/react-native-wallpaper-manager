@@ -1,0 +1,23 @@
+{
+  "name": "react-native-wallpaper-manager",
+  "version": "0.1.0",
+  "description": "set Wallpaper with react-native",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "react-native",
+	"react-native-wallpaper"
+  ],
+  "author": "holly liu",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liuhong1happy/react-native-wallpaper-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/liuhong1happy/react-native-wallpaper-manager/issues"
+  },
+  "homepage": "https://github.com/liuhong1happy/react-native-wallpaper-manager#readme"
+}

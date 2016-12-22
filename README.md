@@ -1,2 +1,2 @@
-# react-native-wallpaper
+# react-native-wallpaper-manager
 set Wallpaper with react-native
