@@ -8,7 +8,8 @@
   },
   "keywords": [
     "react-native",
-    "react-native-wallpaper"
+    "react-native-wallpaper",
+    "react-native-wallpaper-manager"
   ],
   "author": "holly liu",
   "license": "MIT",
