@@ -28,7 +28,7 @@ import com.facebook.react.views.imagehelper.ResourceDrawableIdHelper;
 
 import java.util.Map;
 
-public class WallPaperModule extends ReactContextBaseJavaModule {
+public class WallPaperManager extends ReactContextBaseJavaModule {
 
     private WallpaperManager wallpaperManager;
     private Callback rctCallback = null;
@@ -37,7 +37,7 @@ public class WallPaperModule extends ReactContextBaseJavaModule {
     private Uri mUri;
     private ImageView imgView;
 
-    public WallPaperModule(ReactApplicationContext reactContext) {
+    public WallPaperManager(ReactApplicationContext reactContext) {
         super(reactContext);
         wallpaperManager = WallpaperManager.getInstance(getReactApplicationContext());
         imgView = new ImageView(getReactApplicationContext());
