@@ -53,20 +53,17 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
         String source = params.hasKey("uri") ? params.getString("uri") : null;
         ReadableMap headers = params.hasKey("headers") ? params.getMap("headers") : null;
 
-        if(rctCallback==null){
+        if(rctCallback!=null){
             WritableMap map = Arguments.createMap();
 
             map.putString("status", "error");
             map.putString("msg", "busy");
             map.putString("url",source);
-            rctCallback.invoke(map);
+            callback.invoke(map);
         }
-
 
         rctCallback = callback;
         rctParams = params;
-
-
 
         RequestListener listener = this.getRequestListener();
 
