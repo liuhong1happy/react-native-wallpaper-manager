@@ -1,26 +1,30 @@
 package com.cunyutech.hollyliu.reactnative.wallpaper;
 
-import android.graphics.RectF;
 import android.net.Uri;
-import android.os.SystemClock;
 import android.util.Log;
 import android.util.Base64;
-import android.util.SparseArray;
-import android.view.View;
+import android.widget.ImageView;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.PixelFormat;
+import android.app.WallpaperManager;
 
-import com.github.bumptech.glide.DrawableRequestBuilder;
-import com.github.bumptech.glide.Glide;
-import com.github.bumptech.glide.load.model.GlideUrl;
-import com.github.bumptech.glide.load.model.LazyHeaders;
-import com.github.bumptech.glide.load.resource.drawable.GlideDrawable;
-import com.github.bumptech.glide.request.RequestListener;
-import com.github.bumptech.glide.request.target.Target;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.model.GlideUrl;
+import com.bumptech.glide.load.model.LazyHeaders;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 
-import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
+import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.views.imagehelper.ResourceDrawableIdHelper;
 
 import java.util.Map;
 
@@ -30,11 +34,13 @@ public class WallPaperModule extends ReactContextBaseJavaModule {
     private Callback rctCallback = null;
     private ReadableMap rctParams;
     private ResourceDrawableIdHelper mResourceDrawableIdHelper;
-    private boolean mInitialized = false;
+    private Uri mUri;
+    private ImageView imgView;
 
     public WallPaperModule(ReactApplicationContext reactContext) {
         super(reactContext);
         wallpaperManager = WallpaperManager.getInstance(getReactApplicationContext());
+        imgView = new ImageView(getReactApplicationContext());
     }
     @Override
     public String getName() {
@@ -49,11 +55,13 @@ public class WallPaperModule extends ReactContextBaseJavaModule {
 
         if(rctCallback==null){
             WritableMap map = Arguments.createMap();
-            map.putInt("status", "error");
+
+            map.putString("status", "error");
             map.putString("msg", "busy");
             map.putString("url",source);
-            rctCallback.invoke(response);
+            rctCallback.invoke(map);
         }
+
 
         rctCallback = callback;
         rctParams = params;
@@ -65,9 +73,10 @@ public class WallPaperModule extends ReactContextBaseJavaModule {
         //handle base64
         if (source.startsWith("data:image/png;base64,")){
             Glide
-                    .with(this.getContext())
+                    .with(this.getReactApplicationContext())
                     .load(Base64.decode(source.replaceAll("data:image\\/.*;base64,", ""), Base64.DEFAULT))
-                    .into(listener)
+                    .listener(listener)
+                    .into(imgView)
             ;
             return;
         }
@@ -84,11 +93,7 @@ public class WallPaperModule extends ReactContextBaseJavaModule {
                     !mUri.getScheme().equals("http") &&
                             !mUri.getScheme().equals("https")
                     ){
-                useStorageFile = true ;
-
-                if (!mInitialized) {
-                    this.setImageURI(mUri);
-                }
+                useStorageFile = true;
             }
         } catch (Exception e) {
             // ignore malformed uri, then attempt to extract resource ID.
@@ -97,18 +102,20 @@ public class WallPaperModule extends ReactContextBaseJavaModule {
 
         if (mUri == null) {
             mUri = mResourceDrawableIdHelper.getResourceDrawableUri(
-                    this.getContext(),
+                    this.getReactApplicationContext(),
                     source
             );
             Glide
-                    .with(this.getContext())
+                    .with(this.getReactApplicationContext())
                     .load(mUri)
-                    .into(listener);
+                    .listener(listener)
+                    .into(imgView);
         } else if (useStorageFile) {
             Glide
-                    .with(this.getContext())
+                    .with(this.getReactApplicationContext())
                     .load(mUri)
-                    .into(listener);
+                    .listener(listener)
+                    .into(imgView);
         } else {
             // Handle an http / https address
 
@@ -125,9 +132,10 @@ public class WallPaperModule extends ReactContextBaseJavaModule {
 
             Log.d("thing", mUri.toString());
             Glide
-                    .with(this.getContext())
+                    .with(this.getReactApplicationContext())
                     .load(new GlideUrl(mUri.toString(), lazyHeaders.build()))
-                    .listener(listener);;
+                    .listener(listener)
+                    .into(imgView);
         }
     }
 
@@ -154,7 +162,7 @@ public class WallPaperModule extends ReactContextBaseJavaModule {
 
                 try
                 {
-                    manager.setBitmap(bitmap);
+                    wallpaperManager.setBitmap(bitmap);
                 }
                 catch (Exception e)
                 {
@@ -162,12 +170,12 @@ public class WallPaperModule extends ReactContextBaseJavaModule {
                 }
 
                 WritableMap map = Arguments.createMap();
-                map.putInt("status", "success");
-                map.putString("url", model);
+                map.putString("status", "success");
+                map.putString("url", model.toString());
                 map.putBoolean("isFromMemoryCache", isFromMemoryCache);
                 map.putBoolean("isFirstResource", isFirstResource);
 
-                rctCallback.invoke(response);
+                rctCallback.invoke(map);
                 rctCallback = null;
                 return false;
             }
