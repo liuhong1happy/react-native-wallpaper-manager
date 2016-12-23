@@ -1,4 +1,4 @@
-package com.oblador.vectoricons;
+package com.cunyutech.hollyliu.reactnative.wallpaper;
 
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;
