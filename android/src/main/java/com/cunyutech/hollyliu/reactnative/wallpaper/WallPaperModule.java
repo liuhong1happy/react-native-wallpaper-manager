@@ -8,13 +8,13 @@ import android.util.Base64;
 import android.util.SparseArray;
 import android.view.View;
 
-import com.bumptech.glide.DrawableRequestBuilder;
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.model.GlideUrl;
-import com.bumptech.glide.load.model.LazyHeaders;
-import com.bumptech.glide.load.resource.drawable.GlideDrawable;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.Target;
+import com.github.bumptech.glide.DrawableRequestBuilder;
+import com.github.bumptech.glide.Glide;
+import com.github.bumptech.glide.load.model.GlideUrl;
+import com.github.bumptech.glide.load.model.LazyHeaders;
+import com.github.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.github.bumptech.glide.request.RequestListener;
+import com.github.bumptech.glide.request.target.Target;
 
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
