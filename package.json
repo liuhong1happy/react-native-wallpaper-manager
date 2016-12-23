@@ -1,6 +1,6 @@
 {
   "name": "react-native-wallpaper-manager",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "set Wallpaper with react-native",
   "main": "index.js",
   "scripts": {
@@ -20,10 +20,5 @@
   "bugs": {
     "url": "https://github.com/liuhong1happy/react-native-wallpaper-manager/issues"
   },
-  "homepage": "https://github.com/liuhong1happy/react-native-wallpaper-manager#readme",
-  "rnpm": {
-    "android": {
-      "packageInstance": "new WallPaperReactPackage()"
-    }
-  }
+  "homepage": "https://github.com/liuhong1happy/react-native-wallpaper-manager#readme"
 }
