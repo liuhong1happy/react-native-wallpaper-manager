@@ -26,7 +26,7 @@ public class WallPaperPackage implements ReactPackage {
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
 
-        modules.add(new WallPaperModule(reactContext));
+        modules.add(new WallPaperManager(reactContext));
 
         return modules;
     }
