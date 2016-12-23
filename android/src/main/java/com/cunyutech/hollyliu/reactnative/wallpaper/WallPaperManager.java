@@ -7,14 +7,18 @@ import android.widget.ImageView;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.PixelFormat;
+import android.app.Activity;
 import android.app.WallpaperManager;
+import android.graphics.BitmapFactory;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.model.GlideUrl;
 import com.bumptech.glide.load.model.LazyHeaders;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.request.target.SimpleTarget;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -36,11 +40,15 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
     private ResourceDrawableIdHelper mResourceDrawableIdHelper;
     private Uri mUri;
     private ImageView imgView;
+    private ReactApplicationContext mApplicationContext;
+    private Activity mCurrentActivity;
 
     public WallPaperManager(ReactApplicationContext reactContext) {
         super(reactContext);
-        wallpaperManager = WallpaperManager.getInstance(getReactApplicationContext());
-        imgView = new ImageView(getReactApplicationContext());
+        mApplicationContext = getReactApplicationContext();
+
+        wallpaperManager = WallpaperManager.getInstance(mApplicationContext);
+        imgView = new ImageView(mApplicationContext);
     }
     @Override
     public String getName() {
@@ -50,7 +58,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
     @ReactMethod
     public void setWallpaper(final ReadableMap params, Callback callback){
 
-        String source = params.hasKey("uri") ? params.getString("uri") : null;
+        final String source = params.hasKey("uri") ? params.getString("uri") : null;
         ReadableMap headers = params.hasKey("headers") ? params.getMap("headers") : null;
 
         if(rctCallback!=null){
@@ -65,7 +73,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
         rctCallback = callback;
         rctParams = params;
 
-        RequestListener listener = this.getRequestListener();
+        final RequestListener listener = this.getRequestListener();
 
         //handle base64
         if (source.startsWith("data:image/png;base64,")){
@@ -115,8 +123,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                     .into(imgView);
         } else {
             // Handle an http / https address
-
-            LazyHeaders.Builder lazyHeaders = new LazyHeaders.Builder();
+            final LazyHeaders.Builder lazyHeaders = new LazyHeaders.Builder();
             Log.d("null headers", String.valueOf(headers != null));
             if(headers != null){
                 ReadableMapKeySetIterator it = headers.keySetIterator();
@@ -128,21 +135,79 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
             }
 
             Log.d("thing", mUri.toString());
-            Glide
-                    .with(this.getReactApplicationContext())
-                    .load(new GlideUrl(mUri.toString(), lazyHeaders.build()))
-                    .listener(listener)
-                    .into(imgView);
+            mCurrentActivity = getCurrentActivity();
+            if(mCurrentActivity==null){
+                WritableMap map = Arguments.createMap();
+                map.putString("status", "error");
+                map.putString("msg", "CurrentActivity");
+                map.putString("url",source);
+                rctCallback.invoke(map);
+            }
+            mCurrentActivity.runOnUiThread(new Runnable() {
+                public void run() {
+                    ThreadUtil.assertMainThread();
+                    try{
+                        Glide
+                                .with(mApplicationContext)
+                                .load(new GlideUrl(mUri.toString(), lazyHeaders.build()))
+                                .asBitmap()
+                                .toBytes()
+                                .centerCrop()
+                                .into(new SimpleTarget<byte[]>(1080, 1920) {
+                                    @Override
+                                    public void onResourceReady(byte[] resource, GlideAnimation<? super byte[]> glideAnimation) {
+                                        Bitmap bitmap = BitmapFactory.decodeByteArray(resource, 0, resource.length);
+                                        try
+                                        {
+                                            wallpaperManager.setBitmap(bitmap);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            WritableMap map = Arguments.createMap();
+                                            map.putString("status", "error");
+                                            map.putString("url", source);
+                                            map.putBoolean("isFromMemoryCache", false);
+                                            map.putBoolean("isFirstResource", true);
+
+                                            rctCallback.invoke(map);
+                                            return;
+                                        }
+
+                                        WritableMap map = Arguments.createMap();
+                                        map.putString("status", "success");
+                                        map.putString("url", source);
+                                        map.putBoolean("isFromMemoryCache", false);
+                                        map.putBoolean("isFirstResource", true);
+
+                                        rctCallback.invoke(map);
+                                    }
+                                });
+                    }catch (Exception e) {
+                        WritableMap map = Arguments.createMap();
+                        map.putString("status", "error");
+                        map.putString("url",source);
+                        map.putString("msg", "onException");
+                        rctCallback.invoke(map);
+                    }
+                }
+            });
         }
     }
 
     private RequestListener getRequestListener() {
 
         return new RequestListener<GlideUrl, GlideDrawable>() {
+
             @Override
             public boolean onException(Exception e, GlideUrl model,
                                        Target<GlideDrawable> target,
                                        boolean isFirstResource) {
+                WritableMap map = Arguments.createMap();
+                map.putString("status", "error");
+                map.putString("url", model.toString());
+                map.putBoolean("isFirstResource", isFirstResource);
+                map.putString("msg", "onException");
+                rctCallback.invoke(map);
                 return false;
             }
 
@@ -178,5 +243,4 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
             }
         };
     }
-
-}
+};
