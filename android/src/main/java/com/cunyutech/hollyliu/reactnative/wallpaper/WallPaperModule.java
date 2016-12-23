@@ -49,8 +49,8 @@ public class WallPaperModule extends ReactContextBaseJavaModule {
 
         if(rctCallback==null){
             WritableMap map = Arguments.createMap();
-            map.putInt("status", 'error');
-            map.putString("msg", 'busy');
+            map.putInt("status", "error");
+            map.putString("msg", "busy");
             map.putString("url",source);
             rctCallback.invoke(response);
         }
@@ -162,7 +162,7 @@ public class WallPaperModule extends ReactContextBaseJavaModule {
                 }
 
                 WritableMap map = Arguments.createMap();
-                map.putInt("status", 'success');
+                map.putInt("status", "success");
                 map.putString("url", model);
                 map.putBoolean("isFromMemoryCache", isFromMemoryCache);
                 map.putBoolean("isFirstResource", isFirstResource);
