@@ -55,6 +55,17 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
         return "WallPaperManager";
     }
 
+    public void sendMessage(String status, String msg, String url){
+        if(rctCallback!=null){
+            WritableMap map = Arguments.createMap();
+            map.putString("status", status);
+            map.putString("msg", msg);
+            map.putString("url", url);
+            rctCallback.invoke(map);
+            rctCallback = null;
+        }
+    }
+
     @ReactMethod
     public void setWallpaper(final ReadableMap params, Callback callback){
 
@@ -68,21 +79,38 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
             map.putString("msg", "busy");
             map.putString("url",source);
             callback.invoke(map);
+            return;
         }
 
         rctCallback = callback;
         rctParams = params;
 
-        final RequestListener listener = this.getRequestListener();
+        final SimpleTarget simpleTarget = this.getSimpleTarget(source);
+        mCurrentActivity = getCurrentActivity();
+        if(mCurrentActivity==null){
+            sendMessage('error','CurrentActivity is null',source);
+        }
+        // final RequestListener listener = this.getRequestListener();
 
         //handle base64
         if (source.startsWith("data:image/png;base64,")){
-            Glide
-                    .with(this.getReactApplicationContext())
-                    .load(Base64.decode(source.replaceAll("data:image\\/.*;base64,", ""), Base64.DEFAULT))
-                    .listener(listener)
-                    .into(imgView)
-            ;
+            mCurrentActivity.runOnUiThread(new Runnable() {
+                public void run() {
+                    ThreadUtil.assertMainThread();
+                    try{
+                        Glide
+                            .with(mApplicationContext)
+                            .load(Base64.decode(source.replaceAll("data:image\\/.*;base64,", ""), Base64.DEFAULT))
+                            .asBitmap()
+                            .toBytes()
+                            .centerCrop()
+                            .into(simpleTarget);
+                    }catch (Exception e) {
+                        sendMessage('error','Exception in Glide'，source)
+                    }
+                }
+            });
+
             return;
         }
 
@@ -104,27 +132,48 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
             // ignore malformed uri, then attempt to extract resource ID.
         }
 
-
         if (mUri == null) {
             mUri = mResourceDrawableIdHelper.getResourceDrawableUri(
                     this.getReactApplicationContext(),
                     source
             );
-            Glide
-                    .with(this.getReactApplicationContext())
-                    .load(mUri)
-                    .listener(listener)
-                    .into(imgView);
+            mCurrentActivity.runOnUiThread(new Runnable() {
+                public void run() {
+                    ThreadUtil.assertMainThread();
+                    try{
+                        Glide
+                            .with(mApplicationContext)
+                            .load(mUri)
+                            .asBitmap()
+                            .toBytes()
+                            .centerCrop()
+                            .into(simpleTarget);
+                    }catch (Exception e) {
+                        sendMessage('error','Exception in Glide'，source)
+                    }
+                }
+            });
         } else if (useStorageFile) {
-            Glide
-                    .with(this.getReactApplicationContext())
-                    .load(mUri)
-                    .listener(listener)
-                    .into(imgView);
+            mCurrentActivity.runOnUiThread(new Runnable() {
+                public void run() {
+                    ThreadUtil.assertMainThread();
+                    try{
+                        Glide
+                            .with(mApplicationContext)
+                            .load(mUri)
+                            .asBitmap()
+                            .toBytes()
+                            .centerCrop()
+                            .into(simpleTarget);
+                    }catch (Exception e) {
+                        sendMessage('error','Exception in Glide'，source)
+                    }
+                }
+            });
         } else {
             // Handle an http / https address
             final LazyHeaders.Builder lazyHeaders = new LazyHeaders.Builder();
-            Log.d("null headers", String.valueOf(headers != null));
+
             if(headers != null){
                 ReadableMapKeySetIterator it = headers.keySetIterator();
                 Log.d("next headers", String.valueOf(it.hasNextKey()));
@@ -133,65 +182,44 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                     lazyHeaders.addHeader(Key, headers.getString(Key));
                 }
             }
-
-            Log.d("thing", mUri.toString());
-            mCurrentActivity = getCurrentActivity();
-            if(mCurrentActivity==null){
-                WritableMap map = Arguments.createMap();
-                map.putString("status", "error");
-                map.putString("msg", "CurrentActivity");
-                map.putString("url",source);
-                rctCallback.invoke(map);
-            }
             mCurrentActivity.runOnUiThread(new Runnable() {
                 public void run() {
                     ThreadUtil.assertMainThread();
                     try{
                         Glide
-                                .with(mApplicationContext)
-                                .load(new GlideUrl(mUri.toString(), lazyHeaders.build()))
-                                .asBitmap()
-                                .toBytes()
-                                .centerCrop()
-                                .into(new SimpleTarget<Bitmap>(1080, 1920) {
-                                    @Override
-                                    public void onResourceReady(Bitmap bitmap, GlideAnimation<? super byte[]> glideAnimation) {
-                                        try
-                                        {
-                                            wallpaperManager.setBitmap(bitmap);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            WritableMap map = Arguments.createMap();
-                                            map.putString("status", "error");
-                                            map.putString("url", source);
-                                            map.putBoolean("isFromMemoryCache", false);
-                                            map.putBoolean("isFirstResource", true);
-
-                                            rctCallback.invoke(map);
-                                            return;
-                                        }
-
-                                        WritableMap map = Arguments.createMap();
-                                        map.putString("status", "success");
-                                        map.putString("url", source);
-                                        map.putBoolean("isFromMemoryCache", false);
-                                        map.putBoolean("isFirstResource", true);
-
-                                        rctCallback.invoke(map);
-                                    }
-                                });
+                            .with(mApplicationContext)
+                            .load(new GlideUrl(mUri.toString(), lazyHeaders.build()))
+                            .asBitmap()
+                            .toBytes()
+                            .centerCrop()
+                            .into(simpleTarget);
                     }catch (Exception e) {
-                        WritableMap map = Arguments.createMap();
-                        map.putString("status", "error");
-                        map.putString("url",source);
-                        map.putString("msg", "onException");
-                        rctCallback.invoke(map);
+                        sendMessage('error','Exception in Glide'，source)
                     }
                 }
             });
         }
     }
+
+    private SimpleTarget getSimpleTarget(String source){
+        return new SimpleTarget<Bitmap>(1080, 1920){
+            @Override
+            public void onResourceReady(Bitmap bitmap, GlideAnimation<? super byte[]> glideAnimation) {
+                try
+                {
+                    wallpaperManager.setBitmap(bitmap);
+                }
+                catch (Exception e)
+                {
+                    sendMessage('error','Exception in SimpleTarget',source);
+                    return;
+                }
+                sendMessage('success','Set Wallpaper Success',source);
+            }
+        });
+    }
+
+
 
     private RequestListener getRequestListener() {
 
