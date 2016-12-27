@@ -88,7 +88,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
         final SimpleTarget simpleTarget = this.getSimpleTarget(source);
         mCurrentActivity = getCurrentActivity();
         if(mCurrentActivity==null){
-            sendMessage('error','CurrentActivity is null',source);
+            sendMessage("error","CurrentActivity is null",source);
         }
         // final RequestListener listener = this.getRequestListener();
 
@@ -106,7 +106,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                             .centerCrop()
                             .into(simpleTarget);
                     }catch (Exception e) {
-                        sendMessage('error','Exception in Glide'，source)
+                        sendMessage("error","Exception in Glide",source);
                     }
                 }
             });
@@ -149,7 +149,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                             .centerCrop()
                             .into(simpleTarget);
                     }catch (Exception e) {
-                        sendMessage('error','Exception in Glide'，source)
+                        sendMessage("error","Exception in Glide",source);
                     }
                 }
             });
@@ -166,7 +166,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                             .centerCrop()
                             .into(simpleTarget);
                     }catch (Exception e) {
-                        sendMessage('error','Exception in Glide'，source)
+                        sendMessage("error","Exception in Glide",source);
                     }
                 }
             });
@@ -192,31 +192,51 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                             .asBitmap()
                             .toBytes()
                             .centerCrop()
-                            .into(simpleTarget);
+                            .into(new SimpleTarget<byte[]>(1080, 1920){
+                                @Override
+                                public void onResourceReady(byte[] resource, GlideAnimation<? super byte[]> glideAnimation) {
+                                    Bitmap bitmap = BitmapFactory.decodeByteArray(resource, 0, resource.length);
+                                    try
+                                    {
+                                        wallpaperManager.setBitmap(bitmap);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        sendMessage("error","Exception in SimpleTarget",source);
+                                        return;
+                                    }
+                                    sendMessage("success","Set Wallpaper Success",source);
+                                }
+                                @Override
+                                public void onStart(){
+                                    sendMessage("success","Set Wallpaper Start",source);
+                                }
+                            });
                     }catch (Exception e) {
-                        sendMessage('error','Exception in Glide'，source)
+                        sendMessage("error","Exception in Glide",source);
                     }
                 }
             });
         }
     }
 
-    private SimpleTarget getSimpleTarget(String source){
-        return new SimpleTarget<Bitmap>(1080, 1920){
+    private SimpleTarget<byte[]> getSimpleTarget(final String source){
+        return new SimpleTarget<byte[]>(1080, 1920){
             @Override
-            public void onResourceReady(Bitmap bitmap, GlideAnimation<? super byte[]> glideAnimation) {
+            public void onResourceReady(byte[] resource, GlideAnimation<? super byte[]> glideAnimation) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(resource, 0, resource.length);
                 try
                 {
                     wallpaperManager.setBitmap(bitmap);
                 }
                 catch (Exception e)
                 {
-                    sendMessage('error','Exception in SimpleTarget',source);
+                    sendMessage("error","Exception in SimpleTarget",source);
                     return;
                 }
-                sendMessage('success','Set Wallpaper Success',source);
+                sendMessage("success","Set Wallpaper Success",source);
             }
-        });
+        };
     }
 
 
