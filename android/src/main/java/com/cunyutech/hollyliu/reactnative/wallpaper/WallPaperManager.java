@@ -153,10 +153,9 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                                 .asBitmap()
                                 .toBytes()
                                 .centerCrop()
-                                .into(new SimpleTarget<byte[]>(1080, 1920) {
+                                .into(new SimpleTarget<Bitmap>(1080, 1920) {
                                     @Override
-                                    public void onResourceReady(byte[] resource, GlideAnimation<? super byte[]> glideAnimation) {
-                                        Bitmap bitmap = BitmapFactory.decodeByteArray(resource, 0, resource.length);
+                                    public void onResourceReady(Bitmap bitmap, GlideAnimation<? super byte[]> glideAnimation) {
                                         try
                                         {
                                             wallpaperManager.setBitmap(bitmap);
