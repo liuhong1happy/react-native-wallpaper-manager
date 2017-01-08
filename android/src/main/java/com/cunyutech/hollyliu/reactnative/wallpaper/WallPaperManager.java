@@ -34,6 +34,7 @@ import java.util.Map;
 
 public class WallPaperManager extends ReactContextBaseJavaModule {
 
+    private final ReactApplicationContext reactContext;
     private WallpaperManager wallpaperManager;
     private Callback rctCallback = null;
     private ReadableMap rctParams;
@@ -45,6 +46,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
 
     public WallPaperManager(ReactApplicationContext reactContext) {
         super(reactContext);
+        this.reactContext = reactContext;
         mApplicationContext = getReactApplicationContext();
 
         wallpaperManager = WallpaperManager.getInstance(mApplicationContext);
@@ -85,7 +87,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
         rctCallback = callback;
         rctParams = params;
 
-        final SimpleTarget simpleTarget = this.getSimpleTarget(source);
+        final SimpleTarget<byte[]> simpleTarget = this.getSimpleTarget(source);
         mCurrentActivity = getCurrentActivity();
         if(mCurrentActivity==null){
             sendMessage("error","CurrentActivity is null",source);
@@ -93,7 +95,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
         // final RequestListener listener = this.getRequestListener();
 
         //handle base64
-        if (source.startsWith("data:image/png;base64,")){
+        if ("data:image/png;base64,".startsWith(source)){
             mCurrentActivity.runOnUiThread(new Runnable() {
                 public void run() {
                     ThreadUtil.assertMainThread();
