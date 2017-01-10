@@ -1,5 +1,6 @@
 package com.cunyutech.hollyliu.reactnative.wallpaper;
 
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.Log;
 import android.util.Base64;
@@ -135,7 +136,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
         }
 
         if (mUri == null) {
-            mUri = mResourceDrawableIdHelper.getResourceDrawableUri(
+            mUri = mResourceDrawableIdHelper.getInstance().getResourceDrawableUri(
                     this.getReactApplicationContext(),
                     source
             );
@@ -194,26 +195,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                             .asBitmap()
                             .toBytes()
                             .centerCrop()
-                            .into(new SimpleTarget<byte[]>(1080, 1920){
-                                @Override
-                                public void onResourceReady(byte[] resource, GlideAnimation<? super byte[]> glideAnimation) {
-                                    Bitmap bitmap = BitmapFactory.decodeByteArray(resource, 0, resource.length);
-                                    try
-                                    {
-                                        wallpaperManager.setBitmap(bitmap);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        sendMessage("error","Exception in SimpleTarget",source);
-                                        return;
-                                    }
-                                    sendMessage("success","Set Wallpaper Success",source);
-                                }
-                                @Override
-                                public void onStart(){
-                                    sendMessage("success","Set Wallpaper Start",source);
-                                }
-                            });
+                            .into(simpleTarget);
                     }catch (Exception e) {
                         sendMessage("error","Exception in Glide",source);
                     }
@@ -230,13 +212,19 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                 try
                 {
                     wallpaperManager.setBitmap(bitmap);
+                    sendMessage("success","Set Wallpaper Success",source);
                 }
                 catch (Exception e)
                 {
                     sendMessage("error","Exception in SimpleTarget",source);
                     return;
                 }
-                sendMessage("success","Set Wallpaper Success",source);
+            }
+
+            @Override
+            public void onLoadFailed(Exception e, Drawable errorDrawable) {
+                // Do nothing.
+                sendMessage("error","Set Wallpaper Failed \n"+ e.getMessage() ,source);
             }
         };
     }

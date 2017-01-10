@@ -1,6 +1,6 @@
 {
   "name": "react-native-wallpaper-manager",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "description": "set Wallpaper with react-native",
   "main": "index.js",
   "scripts": {
