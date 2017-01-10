@@ -30,6 +30,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.views.imagehelper.ResourceDrawableIdHelper;
+import com.facebook.react.views.imagehelper.ImageSource;
 
 import java.util.Map;
 
@@ -93,7 +94,6 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
         if(mCurrentActivity==null){
             sendMessage("error","CurrentActivity is null",source);
         }
-        // final RequestListener listener = this.getRequestListener();
 
         //handle base64
         if ("data:image/png;base64,".startsWith(source)){
@@ -109,7 +109,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                             .centerCrop()
                             .into(simpleTarget);
                     }catch (Exception e) {
-                        sendMessage("error","Exception in Glide",source);
+                        sendMessage("error","Exception in Glide：" + e.getMessage(),source);
                     }
                 }
             });
@@ -136,10 +136,24 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
         }
 
         if (mUri == null) {
-            mUri = mResourceDrawableIdHelper.getInstance().getResourceDrawableUri(
-                    this.getReactApplicationContext(),
-                    source
-            );
+            ImageSource is = new ImageSource(this.getReactApplicationContext(),source);
+            if(is.isResource()){
+                int resId = mResourceDrawableIdHelper.getInstance().getResourceDrawableId(this.getReactApplicationContext(),source);
+                Bitmap mBitmap = BitmapFactory.decodeResource(this.getReactApplicationContext().getResources(), resId);
+                try
+                {
+                    wallpaperManager.setBitmap(mBitmap);
+                    sendMessage("success","Set Wallpaper Success",source);
+                }
+                catch (Exception e)
+                {
+                    sendMessage("error","Exception in SimpleTarget：" + e.getMessage(),source);
+                    return;
+                }
+                return;
+            }
+
+            mUri = is.getUri();
             mCurrentActivity.runOnUiThread(new Runnable() {
                 public void run() {
                     ThreadUtil.assertMainThread();
@@ -152,7 +166,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                             .centerCrop()
                             .into(simpleTarget);
                     }catch (Exception e) {
-                        sendMessage("error","Exception in Glide",source);
+                        sendMessage("error","Exception in Glide：" + e.getMessage(),source);
                     }
                 }
             });
@@ -169,7 +183,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                             .centerCrop()
                             .into(simpleTarget);
                     }catch (Exception e) {
-                        sendMessage("error","Exception in Glide",source);
+                        sendMessage("error","Exception in Glide：" + e.getMessage(),source);
                     }
                 }
             });
@@ -197,7 +211,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                             .centerCrop()
                             .into(simpleTarget);
                     }catch (Exception e) {
-                        sendMessage("error","Exception in Glide",source);
+                        sendMessage("error","Exception in Glide：" + e.getMessage(),source);
                     }
                 }
             });
@@ -216,7 +230,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
                 }
                 catch (Exception e)
                 {
-                    sendMessage("error","Exception in SimpleTarget",source);
+                    sendMessage("error","Exception in SimpleTarget：" + e.getMessage(),source);
                     return;
                 }
             }
@@ -224,59 +238,7 @@ public class WallPaperManager extends ReactContextBaseJavaModule {
             @Override
             public void onLoadFailed(Exception e, Drawable errorDrawable) {
                 // Do nothing.
-                sendMessage("error","Set Wallpaper Failed \n"+ e.getMessage() ,source);
-            }
-        };
-    }
-
-
-
-    private RequestListener getRequestListener() {
-
-        return new RequestListener<GlideUrl, GlideDrawable>() {
-
-            @Override
-            public boolean onException(Exception e, GlideUrl model,
-                                       Target<GlideDrawable> target,
-                                       boolean isFirstResource) {
-                WritableMap map = Arguments.createMap();
-                map.putString("status", "error");
-                map.putString("url", model.toString());
-                map.putBoolean("isFirstResource", isFirstResource);
-                map.putString("msg", "onException");
-                rctCallback.invoke(map);
-                return false;
-            }
-
-            @Override
-            public boolean onResourceReady(GlideDrawable drawable, GlideUrl model,
-                                           Target<GlideDrawable> target,
-                                           boolean isFromMemoryCache,
-                                           boolean isFirstResource) {
-
-                Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565);
-                Canvas canvas = new Canvas(bitmap);
-                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-                drawable.draw(canvas);
-
-                try
-                {
-                    wallpaperManager.setBitmap(bitmap);
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
-
-                WritableMap map = Arguments.createMap();
-                map.putString("status", "success");
-                map.putString("url", model.toString());
-                map.putBoolean("isFromMemoryCache", isFromMemoryCache);
-                map.putBoolean("isFirstResource", isFirstResource);
-
-                rctCallback.invoke(map);
-                rctCallback = null;
-                return false;
+                sendMessage("error","Set Wallpaper Failed："+ e.getMessage() ,source);
             }
         };
     }
