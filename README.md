@@ -13,7 +13,7 @@ set Wallpaper with react-native
 ## Usage
 
     import WallPaperManager from 'react-native-wallpaper-manager';
-    WallPaperManager.setWallPaper({uri: 'http://example.com/test.png'}, (res)=> console.log(res));
+    WallPaperManager.setWallpaper({uri: 'http://example.com/test.png'}, (res)=> console.log(res));
   
 ## Concat
 
